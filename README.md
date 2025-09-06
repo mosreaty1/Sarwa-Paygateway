@@ -249,11 +249,9 @@ python app.py
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## Support
 
-For support and questions:
-- Create an issue on GitHub
-- Contact: support@sarwa.example.com
+alsariti1@gmail.com
+
 
 ## Disclaimer
 

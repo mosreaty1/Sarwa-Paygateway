@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block title %}Payment - {{ coin.name }} | Sarwa{% endblock %}
+
+{% block content %}
+<div class="payment-container">
+    <div class="payment-header">
+        <a href="/" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Markets
+        </a>
+        <h1>Complete Your Investment</h1>
+        <p>You're investing in <strong>{{ coin.name }} ({{ coin.symbol }})</strong></p>
+    </div>
+
+    <div class="payment-content">
+        <div class="payment-form-section">
+            <div class="card">
+                <h2><i class="fas fa-wallet"></i> Your Information</h2>
+                <div id="alert-container"></div>
+                
+                <form id="payment-form">
+                    <div class="form-group">
+                        <label for="full_name">Full Name</label>
+                        <input type="text" id="full_name" name="full_name" class="form-control" placeholder="Jane Doe" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" placeholder="jane.doe@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="amount">Investment Amount (USD)</label>
+                        <div class="input-with-icon">
+                            <span>$</span>
+                            <input type="number" id="amount" name="amount" class="form-control" min="10" step="0.01" placeholder="100.00" required>
+                        </div>
+                    </div>
+                     <div class="form-group">
+                        <label for="card_number">Card Details</label>
+                        <input type="text" id="card_number" name="card_number" class="form-control" placeholder="Card Number" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <input type="text" id="expiry" name="expiry" class="form-control" placeholder="MM/YY" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" id="cvv" name="cvv" class="form-control" placeholder="CVV" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-primary btn-full" id="submit-btn">
+                        <i class="fas fa-lock"></i> Complete Investment
+                    </button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Processing Your Secure Payment...</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="payment-summary-section">
+            <div class="card payment-summary">
+                <h3><i class="fas fa-receipt"></i> Investment Summary</h3>
+                <div class="crypto-display">
+                    <div class="crypto-icon" style="background: {{ coin.color if coin.color else '#00695c' }};">
+                        {# --- ICON FIX START --- #}
+                        <i class="fab 
+                            {% if coin.symbol == 'BTC' %}fa-bitcoin
+                            {% elif coin.symbol == 'ETH' %}fa-ethereum
+                            {% elif coin.symbol == 'BNB' %}fa-gg-circle
+                            {% else %}fa-gg
+                            {% endif %}"></i>
+                        {# --- ICON FIX END --- #}
+                    </div>
+                    <div class="crypto-details">
+                        <h4>{{ coin.name }}</h4>
+                        <p>{{ coin.symbol }}</p>
+                    </div>
+                    <p class="current-price">${{ "{:,.2f}".format(coin.price) }}</p>
+                </div>
+
+                <div class="calculation-display" id="calculation">
+                    <div class="calc-row">
+                        <span>Investment:</span>
+                        <span id="invest-amount">$0.00</span>
+                    </div>
+                    <div class="calc-row">
+                        <span>Processing Fee (1.5%):</span>
+                        <span id="processing-fee">$0.00</span>
+                    </div>
+                    <div class="calc-row total">
+                        <span>You'll Receive Approx:</span>
+                        <span id="crypto-amount">0 {{ coin.symbol }}</span>
+                    </div>
+                </div>
+                
+                <div class="secure-info">
+                    <p><i class="fas fa-shield-alt"></i> All transactions are secure and encrypted.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Added style for Font Awesome icon */
+.crypto-icon .fab {
+    font-size: 24px;
+    color: white;
+}
+
+.payment-header { text-align: center; margin-bottom: 48px; }
+.back-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    color: var(--text-light-2); text-decoration: none;
+    margin-bottom: 24px; transition: color 0.3s ease;
+}
+.back-btn:hover { color: var(--primary-green); }
+.payment-header h1 { font-size: 2.8rem; margin-bottom: 12px; font-weight: 700; }
+.payment-header p { font-size: 1.1rem; color: var(--text-light-2); }
+
+.payment-content { display: grid; grid-template-columns: 1fr 420px; gap: 40px; align-items: start; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.form-group { margin-bottom: 24px; }
+.input-with-icon { position: relative; }
+.input-with-icon span {
+    position: absolute; top: 50%; left: 20px;
+    transform: translateY(-50%); font-size: 1rem; color: var(--text-light-3);
+}
+.input-with-icon input { padding-left: 40px; }
+
+.payment-summary { position: sticky; top: 120px; }
+.crypto-display {
+    display: grid; grid-template-columns: auto 1fr auto;
+    align-items: center; gap: 16px; padding-bottom: 24px;
+    margin-bottom: 24px; border-bottom: 1px solid var(--bg-dark-3);
+}
+.crypto-icon {
+    width: 48px; height: 48px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+}
+.crypto-details h4 { font-size: 1.25rem; font-weight: 600; }
+.crypto-details p { color: var(--text-light-3); }
+.current-price { font-size: 1.25rem; font-weight: 600; }
+
+.calc-row { display: flex; justify-content: space-between; margin-bottom: 16px; }
+.calc-row span:first-child { color: var(--text-light-2); }
+.calc-row.total {
+    padding-top: 16px; margin-top: 16px; font-weight: 700;
+    border-top: 1px solid var(--primary-green); color: var(--primary-green);
+}
+
+.secure-info { text-align: center; margin-top: 24px; color: var(--text-light-3); }
+.secure-info i { color: var(--primary-green); margin-right: 8px; }
+
+.btn-full { width: 100%; padding: 18px; font-size: 1.1rem; border-radius: var(--radius-lg); }
+
+@media (max-width: 968px) {
+    .payment-content { grid-template-columns: 1fr; }
+    .payment-summary { position: static; order: -1; }
+}
+@media (max-width: 576px) {
+    .form-row { grid-template-columns: 1fr; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let coinPrice = {{ coin.price }};
+const coinSymbol = '{{ coin.symbol }}';
+
+function calculateInvestment(amount) {
+    const amountNum = parseFloat(amount) || 0;
+    const fee = amountNum * 0.015;
+    const netAmount = amountNum - fee;
+    const cryptoAmount = netAmount / coinPrice;
+    
+    document.getElementById('invest-amount').textContent = `$${amountNum.toFixed(2)}`;
+    document.getElementById('processing-fee').textContent = `$${fee.toFixed(2)}`;
+    document.getElementById('crypto-amount').textContent = `${cryptoAmount.toFixed(8)} ${coinSymbol}`;
+}
+
+document.getElementById('amount').addEventListener('input', (e) => calculateInvestment(e.target.value));
+
+document.getElementById('payment-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const data = {
+        email: formData.get('email'),
+        full_name: formData.get('full_name'),
+        card_number: formData.get('card_number'),
+        expiry: formData.get('expiry'),
+        cvv: formData.get('cvv'),
+        coin_symbol: coinSymbol,
+        amount: formData.get('amount')
+    };
+    
+    document.getElementById('payment-form').style.display = 'none';
+    document.getElementById('loading').style.display = 'block';
+    
+    fetch('/api/process_payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            window.location.href = data.redirect_url;
+        } else {
+            showAlert(data.message || 'An unknown error occurred.', 'error');
+            document.getElementById('payment-form').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+    })
+    .catch(error => {
+        showAlert('Payment processing failed. Please try again.', 'error');
+        document.getElementById('payment-form').style.display = 'block';
+        document.getElementById('loading').style.display = 'none';
+    });
+});
+
+function showAlert(message, type) {
+    const alertContainer = document.getElementById('alert-container');
+    const alertClass = type === 'error' ? 'alert-error' : 'alert-success';
+    alertContainer.innerHTML = `<div class="alert ${alertClass}">${message}</div>`;
+    setTimeout(() => { alertContainer.innerHTML = ''; }, 5000);
+}
+</script>
+{% endblock %}

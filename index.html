@@ -1,0 +1,404 @@
+{% extends "base.html" %}
+
+{% block title %}Sarwa - Professional Crypto Investment Platform{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Invest in the Future, <span class="highlight">Today.</span></h1>
+    <p>A professional-grade platform for cryptocurrency investment, trusted by thousands worldwide. Begin your journey to financial freedom with Sarwa.</p>
+    <a href="#crypto-selection" class="btn-primary hero-btn">
+        <i class="fas fa-rocket"></i> Start Investing
+    </a>
+</div>
+
+<section id="crypto-selection" class="crypto-section">
+    <div class="section-header text-center mb-40">
+        <h2 class="section-title">Live Cryptocurrency Markets</h2>
+        <p class="section-subtitle">Real-time prices with professional-grade charts and analytics</p>
+    </div>
+
+    <div class="crypto-grid">
+        {% for symbol, coin in coins.items() %}
+        <div class="crypto-card" id="card-{{ symbol }}">
+            <div class="crypto-header">
+                <div class="crypto-icon-wrapper">
+                    <div class="crypto-icon" style="background-color: {{ coin.color }};">
+                        {# --- ICON FIX START --- #}
+                        <i class="fab 
+                            {% if symbol == 'BTC' %}fa-bitcoin
+                            {% elif symbol == 'ETH' %}fa-ethereum
+                            {% elif symbol == 'BNB' %}fa-gg-circle
+                            {% else %}fa-gg
+                            {% endif %}"></i>
+                        {# --- ICON FIX END --- #}
+                    </div>
+                </div>
+                <div class="crypto-info">
+                    <h3>{{ coin.name }}</h3>
+                    <p class="crypto-symbol">{{ coin.symbol }}</p>
+                </div>
+            </div>
+            
+            <div class="price-chart-container">
+                <canvas id="chart-{{ symbol }}" class="price-chart" width="320" height="120"></canvas>
+                <div class="price-overlay">
+                    <div class="current-price" id="price-{{ symbol }}" data-price="{{ coin.price }}">${{ "{:,.2f}".format(coin.price) }}</div>
+                    <div class="price-change" id="change-{{ symbol }}" data-change="{{ coin.change_24h }}">
+                        {% if coin.change_24h >= 0 %}
+                            <i class="fas fa-arrow-up"></i> +{{ "%.2f"|format(coin.change_24h) }}%
+                        {% else %}
+                            <i class="fas fa-arrow-down"></i> {{ "%.2f"|format(coin.change_24h) }}%
+                        {% endif %}
+                        <span>(24h)</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="crypto-actions">
+                <button class="btn-invest">
+                    <i class="fas fa-plus"></i>
+                    Invest Now
+                </button>
+                <div class="market-cap">
+                    <span class="label">Market Cap</span>
+                    <span class="value" id="mcap-{{ symbol }}">$...</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="status-bar">
+        <div class="status-item live-status">
+            <div class="pulse-dot"></div>
+            <span>Live Market Data (Simulated)</span>
+        </div>
+        <div class="status-item">
+            <i class="fas fa-shield-alt"></i>
+            <span>Bank-Level Security</span>
+        </div>
+        <div class="status-item">
+            <i class="fas fa-headset"></i>
+            <span>24/7 Human Support</span>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Added styles for Font Awesome icons */
+.crypto-icon .fab {
+    font-size: 28px;
+    color: white;
+}
+
+.hero {
+    text-align: center;
+    padding: 100px 0;
+    margin: 40px 0 80px;
+}
+.hero h1 {
+    font-size: clamp(2.8rem, 5vw, 4.5rem);
+    font-weight: 800;
+    margin-bottom: 24px;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+}
+.hero .highlight {
+    color: var(--primary-green);
+}
+.hero p {
+    font-size: 1.25rem;
+    color: var(--text-light-2);
+    margin-bottom: 40px;
+    max-width: 650px;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1.7;
+}
+.hero-btn {
+    padding: 16px 32px;
+    font-size: 1.1rem;
+}
+
+.section-header {
+    margin-bottom: 48px;
+}
+.section-title {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--text-light-1);
+    margin-bottom: 16px;
+}
+.section-subtitle {
+    font-size: 1.125rem;
+    color: var(--text-light-2);
+    max-width: 600px;
+    margin: 0 auto;
+}
+.crypto-section {
+    margin: 80px 0;
+}
+
+.crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+    gap: 32px;
+    margin-bottom: 48px;
+}
+
+.crypto-card {
+    background: var(--bg-dark-2);
+    border: 1px solid var(--bg-dark-3);
+    border-radius: var(--radius-xl);
+    padding: 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+
+.crypto-card:hover {
+    transform: translateY(-8px);
+    border-color: var(--primary-green);
+    box-shadow: 0 10px 30px rgba(0, 224, 184, 0.1);
+}
+
+.crypto-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.crypto-icon-wrapper {
+    flex-shrink: 0;
+}
+.crypto-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.crypto-info h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-light-1);
+}
+.crypto-symbol {
+    color: var(--text-light-3);
+    font-weight: 500;
+    font-size: 1rem;
+}
+
+.price-chart-container {
+    position: relative;
+    height: 120px;
+    margin-bottom: 20px;
+}
+.price-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.price-overlay {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+}
+.current-price {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-light-1);
+}
+.price-change {
+    font-size: 1rem;
+    font-weight: 600;
+}
+.price-change[data-change*="-"] { color: var(--error); }
+.price-change:not([data-change*="-"]) { color: var(--success); }
+
+.crypto-actions {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 16px;
+    border-top: 1px solid var(--bg-dark-3);
+}
+
+.btn-invest {
+    background: var(--primary-dark-green);
+    color: var(--text-light-1);
+    border: none;
+    padding: 12px 20px;
+    border-radius: var(--radius-lg);
+    font-weight: 600;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.btn-invest:hover {
+    background: var(--primary-green);
+    color: var(--bg-dark-1);
+}
+
+.market-cap { text-align: right; }
+.market-cap .label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-light-3);
+    font-weight: 500;
+}
+.market-cap .value {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-light-2);
+}
+
+.status-bar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 48px;
+    padding: 24px 32px;
+    background: var(--bg-dark-2);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--bg-dark-3);
+}
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--text-light-2);
+    font-size: 1rem;
+    font-weight: 500;
+}
+.status-item i {
+    color: var(--primary-green);
+    font-size: 1.2rem;
+}
+.live-status { color: var(--primary-green); }
+.pulse-dot {
+    width: 10px;
+    height: 10px;
+    background: var(--primary-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 12px var(--primary-green);
+}
+
+@keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    70% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.7; }
+}
+
+@media (max-width: 768px) {
+    .crypto-grid { grid-template-columns: 1fr; }
+    .status-bar { flex-direction: column; gap: 24px; }
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<script>
+// --- CHART & DATA SIMULATION FIX START ---
+const chartInstances = {};
+const coinSymbols = [{% for symbol in coins %}'{{ symbol }}'{% if not loop.last %}, {% endif %}{% endfor %}];
+const HISTORY_LENGTH = 50;
+
+// Function to generate initial random data for a chart
+function generateInitialData(basePrice) {
+    const data = [];
+    let price = basePrice * (1 - (Math.random() * 0.1)); // Start slightly lower
+    for (let i = 0; i < HISTORY_LENGTH; i++) {
+        data.push(price);
+        price *= (1 + (Math.random() - 0.49) * 0.02); // Small random walk
+    }
+    return data;
+}
+
+// Function to create a new chart
+function createChart(symbol, canvas, initialData) {
+    const ctx = canvas.getContext('2d');
+    return new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: Array(HISTORY_LENGTH).fill(''),
+            datasets: [{
+                data: initialData,
+                borderColor: '#00e0b8',
+                backgroundColor: 'rgba(0, 224, 184, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false }, tooltip: { enabled: false } },
+            scales: { x: { display: false }, y: { display: false } },
+            elements: { point: { radius: 0 } },
+        }
+    });
+}
+
+// Function to update charts with new simulated data
+function simulatePriceUpdates() {
+    coinSymbols.forEach(symbol => {
+        const chart = chartInstances[symbol];
+        if (!chart) return;
+
+        // Get the last price from the chart data
+        const data = chart.data.datasets[0].data;
+        const lastPrice = data[data.length - 1];
+        
+        // Generate a new price based on the last one
+        const newPrice = lastPrice * (1 + (Math.random() - 0.5) * 0.03); // A bit of volatility
+
+        // Update chart data (add new, remove old)
+        data.push(newPrice);
+        data.shift();
+        chart.update('none');
+
+        // Update the displayed price text
+        const priceEl = document.getElementById(`price-${symbol}`);
+        if(priceEl) {
+            priceEl.innerText = `$${newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        }
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    coinSymbols.forEach(symbol => {
+        const canvas = document.getElementById(`chart-${symbol}`);
+        const priceEl = document.getElementById(`price-${symbol}`);
+        if (canvas && priceEl) {
+            const basePrice = parseFloat(priceEl.dataset.price);
+            const initialData = generateInitialData(basePrice);
+            chartInstances[symbol] = createChart(symbol, canvas, initialData);
+        }
+        
+        const card = document.getElementById(`card-${symbol}`);
+        card.addEventListener('click', (e) => {
+            const target = e.target;
+            if (target.classList.contains('btn-invest') || target.closest('.btn-invest')) {
+                window.location.href = `/payment/${symbol}`;
+            }
+        });
+    });
+
+    // Start the simulation
+    setInterval(simulatePriceUpdates, 1500);
+});
+// --- CHART & DATA SIMULATION FIX END ---
+</script>
+{% endblock %}

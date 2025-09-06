@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Sarwa{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>Admin Dashboard</h1>
+        <p>Monitor and manage cryptocurrency investments</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card card">
+            <div class="stat-icon"><i class="fas fa-dollar-sign"></i></div>
+            <div class="stat-content">
+                <p>Total Revenue</p>
+                <h3 id="total-revenue">$0.00</h3>
+            </div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-content">
+                <p>Total Payments</p>
+                <h3 id="total-payments">0</h3>
+            </div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon"><i class="fas fa-coins"></i></div>
+            <div class="stat-content">
+                <p>Total Fees</p>
+                <h3 id="total-fees">$0.00</h3>
+            </div>
+        </div>
+        <div class="stat-card card">
+            <div class="stat-icon"><i class="fas fa-users"></i></div>
+            <div class="stat-content">
+                <p>Unique Investors</p>
+                <h3 id="unique-investors">0</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="payments-section card">
+        <div class="section-header">
+            <h2><i class="fas fa-list"></i> Recent Payments</h2>
+            <div class="filters">
+                <input type="text" id="search-input" placeholder="Search..." class="form-control">
+                <button onclick="refreshPayments()" class="btn-secondary">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+            </div>
+        </div>
+
+        <div class="loading" id="payments-loading" style="display: block;">
+            <div class="spinner"></div>
+        </div>
+
+        <div id="payments-table-container" style="display: none;">
+            <div class="table-responsive">
+                <table class="payments-table">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Customer</th>
+                            <th>Crypto</th>
+                            <th>Amount (USD)</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="payments-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-header { text-align: center; margin-bottom: 40px; }
+.admin-header h1 { font-size: 2.8rem; margin-bottom: 10px; }
+.admin-header p { font-size: 1.1rem; color: var(--text-light-2); }
+
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 25px; margin-bottom: 40px; }
+.stat-card { display: flex; align-items: center; gap: 20px; padding: 25px; }
+.stat-icon {
+    width: 60px; height: 60px; background: var(--bg-dark-3);
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; color: var(--primary-green); font-size: 24px;
+}
+.stat-content p { color: var(--text-light-2); font-weight: 500; margin-bottom: 5px; }
+.stat-content h3 { font-size: 1.8rem; font-weight: 700; color: var(--text-light-1); }
+
+.section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 1rem; }
+.section-header h2 { font-size: 1.5rem; }
+.filters { display: flex; gap: 1rem; }
+.btn-secondary {
+    background: var(--bg-dark-3); color: var(--text-light-1); padding: 10px 20px;
+    border: none; border-radius: var(--radius-md); font-weight: 600;
+    cursor: pointer; transition: all 0.3s ease;
+}
+.btn-secondary:hover { background: var(--primary-green); color: var(--bg-dark-1); }
+
+.table-responsive { overflow-x: auto; }
+.payments-table { width: 100%; border-collapse: collapse; }
+.payments-table th, .payments-table td { padding: 15px 12px; text-align: left; border-bottom: 1px solid var(--bg-dark-3); }
+.payments-table th { font-weight: 600; color: var(--text-light-2); font-size: 0.9rem; text-transform: uppercase; }
+.payments-table tbody tr:hover { background-color: var(--bg-dark-3); }
+.status-badge {
+    padding: 6px 12px; border-radius: 20px;
+    font-size: 0.85rem; font-weight: 600;
+}
+.status-completed { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+.customer-name { font-weight: 600; color: var(--text-light-1); }
+.customer-email { font-size: 0.9rem; color: var(--text-light-3); }
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let allPayments = [];
+
+async function loadPayments() {
+    try {
+        document.getElementById('payments-loading').style.display = 'block';
+        document.getElementById('payments-table-container').style.display = 'none';
+        
+        const response = await fetch('/api/payments');
+        const data = await response.json();
+        
+        if (data.success) {
+            allPayments = data.payments;
+            updateStats(allPayments);
+            displayPayments(allPayments);
+        }
+    } catch (error) {
+        console.error('Error loading payments:', error);
+    } finally {
+        document.getElementById('payments-loading').style.display = 'none';
+        document.getElementById('payments-table-container').style.display = 'block';
+    }
+}
+
+function updateStats(payments) {
+    const totalRevenue = payments.reduce((sum, p) => sum + p.amount_usd, 0);
+    const totalFees = payments.reduce((sum, p) => sum + p.transaction_fee, 0);
+    const uniqueInvestors = new Set(payments.map(p => p.email)).size;
+    
+    document.getElementById('total-revenue').textContent = `$${totalRevenue.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('total-payments').textContent = payments.length.toLocaleString();
+    document.getElementById('total-fees').textContent = `$${totalFees.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+    document.getElementById('unique-investors').textContent = uniqueInvestors.toLocaleString();
+}
+
+function displayPayments(payments) {
+    const tbody = document.getElementById('payments-tbody');
+    tbody.innerHTML = payments.map(p => `
+        <tr>
+            <td>${p.payment_id.substring(0, 8)}...</td>
+            <td>
+                <div class="customer-name">${p.full_name}</div>
+                <div class="customer-email">${p.email}</div>
+            </td>
+            <td>${p.coin_symbol}</td>
+            <td>$${p.amount_usd.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+            <td>${new Date(p.created_at).toLocaleDateString()}</td>
+            <td><span class="status-badge status-${p.status.toLowerCase()}">${p.status}</span></td>
+        </tr>
+    `).join('');
+}
+
+function filterPayments() {
+    const searchTerm = document.getElementById('search-input').value.toLowerCase();
+    const filtered = allPayments.filter(p => 
+        p.full_name.toLowerCase().includes(searchTerm) ||
+        p.email.toLowerCase().includes(searchTerm) ||
+        p.payment_id.toLowerCase().includes(searchTerm)
+    );
+    displayPayments(filtered);
+}
+
+function refreshPayments() { loadPayments(); }
+
+document.getElementById('search-input').addEventListener('input', filterPayments);
+document.addEventListener('DOMContentLoaded', loadPayments);
+</script>
+{% endblock %}
